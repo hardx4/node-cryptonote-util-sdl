@@ -1,50 +1,88 @@
-// Copyright (c) 2012-2013 The Cryptonote developers
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2017 XDN-project developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <fstream>
+#include "Account.h"
+#include "CryptoNoteSerialization.h"
 
-#include "include_base_utils.h"
-#include "account.h"
-#include "warnings.h"
-#include "crypto/crypto.h"
-#include "cryptonote_core/cryptonote_basic_impl.h"
-#include "cryptonote_core/cryptonote_format_utils.h"
-using namespace std;
+namespace CryptoNote {
+//-----------------------------------------------------------------
+AccountBase::AccountBase() {
+  setNull();
+}
+//-----------------------------------------------------------------
+void AccountBase::setNull() {
+  m_keys = AccountKeys();
+}
+//-----------------------------------------------------------------
+void AccountBase::generate() {
+  Crypto::generate_keys(m_keys.address.spendPublicKey, m_keys.spendSecretKey);
+  Crypto::generate_keys(m_keys.address.viewPublicKey, m_keys.viewSecretKey);
+  m_creation_timestamp = time(NULL);
+}
+//-----------------------------------------------------------------
+const AccountKeys &AccountBase::getAccountKeys() const {
+  return m_keys;
+}
 
-DISABLE_VS_WARNINGS(4244 4345)
+void AccountBase::setAccountKeys(const AccountKeys &keys) {
+  m_keys = keys;
+}
+//-----------------------------------------------------------------
 
-  namespace cryptonote
+void AccountBase::serialize(ISerializer &s) {
+  s(m_keys, "m_keys");
+  s(m_creation_timestamp, "m_creation_timestamp");
+}
+//-----------------------------------------------------------------
+Crypto::SecretKey AccountBase::generate_or_recover(const Crypto::SecretKey& recovery_key, const Crypto::SecretKey& secondary_key, bool is_recovery, bool is_copy, bool is_deterministic)
 {
-  //-----------------------------------------------------------------
-  account_base::account_base()
-  {
-    set_null();
-  }
-  //-----------------------------------------------------------------
-  void account_base::set_null()
-  {
-    m_keys = account_keys();
-  }
-  //-----------------------------------------------------------------
-  void account_base::generate()
-  {
-    generate_keys(m_keys.m_account_address.m_spend_public_key, m_keys.m_spend_secret_key);
-    generate_keys(m_keys.m_account_address.m_view_public_key, m_keys.m_view_secret_key);
-    m_creation_timestamp = time(NULL);
-  }
-  //-----------------------------------------------------------------
-  const account_keys& account_base::get_keys() const
-  {
-    return m_keys;
-  }
-  //-----------------------------------------------------------------
-  std::string account_base::get_public_address_str()
-  {
-    //TODO: change this code into base 58
-    return get_account_address_as_str(m_keys.m_account_address);
-  }
-  //-----------------------------------------------------------------
+    Crypto::SecretKey like_seed = 
+		generate_keys_or_recover(
+			m_keys.address.spendPublicKey, 
+			m_keys.spendSecretKey, 
+			recovery_key, 
+			is_recovery);
+
+    //rng for generating second set of keys is hash of like_seed rng
+	//means only one set of electrum-style words needed for recovery
+	
+	// is_recovery = 0 >> Gen RND spendSecretKey ELSE use recovery_key
+	// is_copy = 0 >> secondary_key=KECCAK ELSE secondary_key untouched
+	// is_deterministic = 0 >> Gen RND viewSecretKey else use secondary_key
+	if (!is_copy) {
+		keccak((uint8_t *)&like_seed, sizeof(Crypto::SecretKey), (uint8_t *)&secondary_key, sizeof(Crypto::SecretKey));
+	}
+	else {
+		is_deterministic = 1;
+	}
+
+    generate_keys_or_recover(
+		m_keys.address.viewPublicKey, 
+		m_keys.viewSecretKey, 
+		secondary_key, 
+		is_deterministic);
+
+	struct tm timestamp;
+	
+	timestamp.tm_year = 2017 - 1900;  // 2017-11-14
+	timestamp.tm_mon = 11 - 1;
+	timestamp.tm_mday = 14;
+	timestamp.tm_hour = 0;
+	timestamp.tm_min = 0;
+	timestamp.tm_sec = 0;
+
+	if (is_recovery)
+		{
+			m_creation_timestamp = mktime(&timestamp);
+		}
+	else
+		{
+			m_creation_timestamp = time(NULL);
+		}
+		
+	return like_seed;
+}
+//-----------------------------------------------------------------
 }

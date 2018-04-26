@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <string>
 #include <algorithm>
-#include "CryptoNoteCore/cryptonote_basic.h"
-#include "CryptoNoteCore/cryptonote_format_utils.h"
+#include "cryptonote_core/cryptonote_basic.h"
+#include "cryptonote_core/cryptonote_format_utils.h"
 #include "cryptonote_protocol/blobdatatype.h"
 #include "crypto/crypto.h"
 #include "crypto/hash.h"
@@ -172,7 +172,7 @@ Handle<Value> construct_block_blob(const Arguments& args) {
         if (!mergeBlocks(parent_block, b, std::vector<crypto::hash>()))
             return except("Failed to postprocess mining block");
     }
-    if (b.major_version == BLOCK_MAJOR_VERSION_3) {
+    if (b.major_version >= BLOCK_MAJOR_VERSION_3) {
         block parent_block;
         b.parent_block.nonce = nonce;
         if (!construct_parent_block(b, parent_block))

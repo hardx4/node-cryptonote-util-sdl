@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2014-2017 XDN-project developers
+// Copyright (c) 2012-2013 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,8 +12,6 @@
 
 #if defined(_MSC_VER)
 #include <stdlib.h>
-
-#define inline __inline
 
 static inline uint32_t rol32(uint32_t x, int r) {
   static_assert(sizeof(uint32_t) == sizeof(unsigned int), "this code assumes 32-bit integers");

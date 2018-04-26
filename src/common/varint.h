@@ -1,17 +1,16 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2014-2017 XDN-project developers
+// Copyright (c) 2012-2013 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
 #include <limits>
-#include <sstream>
-#include <string>
 #include <type_traits>
 #include <utility>
+#include <sstream>
+#include <string>
 
-namespace Tools {
+namespace tools {
 
     template<typename OutputIt, typename T>
     typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, void>::type

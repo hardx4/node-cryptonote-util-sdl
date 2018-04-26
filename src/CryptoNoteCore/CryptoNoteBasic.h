@@ -6,7 +6,7 @@
 #pragma once
 
 #include <boost/utility/value_init.hpp>
-#include <CryptoNote.h>
+#include "CryptoNote.h"
 
 namespace CryptoNote {
   const Crypto::Hash NULL_HASH = boost::value_initialized<Crypto::Hash>();

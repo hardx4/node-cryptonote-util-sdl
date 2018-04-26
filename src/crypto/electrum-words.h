@@ -36,7 +36,7 @@
 #include <cstdint>
 #include <map>
 //#include "crypto/crypto.h"  // for declaration of crypto::secret_key
-#include <CryptoTypes.h>
+#include "CryptoTypes.h"
 
 namespace Crypto
 {

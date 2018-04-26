@@ -39,7 +39,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 //#include "crypto/crypto.h"  // for declaration of crypto::secret_key
-#include <CryptoTypes.h>
+#include "CryptoTypes.h"
 #include "crypto/electrum-words.h"
 
 namespace Crypto

@@ -18,7 +18,7 @@
 namespace crypto {
   extern "C" {
 #endif
-    void chacha8(const void* data, size_t length, const uint8_t* key, const uint8_t* iv, char* cipher);
+	  void chacha8(size_t doubleRounds, const void* data, size_t length, const uint8_t* key, const uint8_t* iv, char* cipher);
 #if defined(__cplusplus)
   }
 
@@ -41,7 +41,7 @@ namespace crypto {
   static_assert(sizeof(chacha8_key) == CHACHA8_KEY_SIZE && sizeof(chacha8_iv) == CHACHA8_IV_SIZE, "Invalid structure size");
 
   inline void chacha8(const void* data, std::size_t length, const chacha8_key& key, const chacha8_iv& iv, char* cipher) {
-    chacha8(data, length, reinterpret_cast<const uint8_t*>(&key), reinterpret_cast<const uint8_t*>(&iv), cipher);
+    chacha8(4, data, length, reinterpret_cast<const uint8_t*>(&key), reinterpret_cast<const uint8_t*>(&iv), cipher);
   }
 
   inline void generate_chacha8_key(std::string password, chacha8_key& key) {

@@ -62,6 +62,46 @@ namespace crypto {
     sc_reduce32(&res);
   }
 
+
+  //////////////////////////////////////////////////////////////////////  
+  //generate public and secret keys from a random 256-bit integer or
+  //recover from recovery_key if is_recovery = true
+  //////////////////////////////////////////////////////////////////////  
+  SecretKey crypto_ops::generate_keys_or_recover
+	  (
+	  PublicKey &pub,
+	  SecretKey &sec,
+	  const SecretKey& recovery_key,
+	  bool is_recovery
+	  )
+  {
+	  lock_guard<mutex> lock(random_lock);
+	  ge_p3 point;
+
+	  SecretKey rng;
+
+	  if (is_recovery)
+	  {
+		  rng = recovery_key;
+	  }
+	  else
+	  {
+		  //random_scalar(rng);
+		  random_scalar(reinterpret_cast<EllipticCurveScalar&>(rng));
+	  }
+	  sec = rng;
+	  //sc_reduce32(&sec);  // reduce in case second round of keys (sendkeys)
+	  sc_reduce32((uint8_t *)&sec);
+
+	  //ge_scalarmult_base(&point, &sec);
+	  ge_scalarmult_base(&point, reinterpret_cast<unsigned char*>(&sec));
+	  //ge_p3_tobytes(&pub, &point);
+	  ge_p3_tobytes(reinterpret_cast<unsigned char*>(&pub), &point);
+
+	  return rng;
+  }
+  //////////////////////////////////////////////////////////////////////
+
   void crypto_ops::generate_keys(public_key &pub, secret_key &sec) {
     lock_guard<mutex> lock(random_lock);
     ge_p3 point;
@@ -69,6 +109,16 @@ namespace crypto {
     ge_scalarmult_base(&point, &sec);
     ge_p3_tobytes(&pub, &point);
   }
+
+  //////////////////////////////////////////////////////////////////////  
+  bool crypto_ops::check_skey(const SecretKey &key) {
+	  ge_p3 point;
+	  if (sc_check(reinterpret_cast<const unsigned char*>(&key)) != 0) {
+		  return false;
+	  }
+	  return true;
+  }
+  ////////////////////////////////////////////////////////////////////// 
 
   bool crypto_ops::check_key(const public_key &key) {
     ge_p3 point;
@@ -221,7 +271,7 @@ DISABLE_VS_WARNINGS(4200)
 POP_WARNINGS
 
   static inline size_t rs_comm_size(size_t pubs_count) {
-    return sizeof(rs_comm) + pubs_count * sizeof(rs_comm().ab[0]);
+	  return sizeof(rs_comm)+pubs_count * 2 * sizeof(ec_point);
   }
 
   void crypto_ops::generate_ring_signature(const hash &prefix_hash, const key_image &image,

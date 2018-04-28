@@ -62,10 +62,15 @@ namespace crypto {
     void operator=(const crypto_ops &);
     ~crypto_ops();
 
+	static SecretKey generate_keys_or_recover(PublicKey &pub, SecretKey &sec, const SecretKey& recovery_key, bool is_recovery);
+	friend SecretKey generate_keys_or_recover(PublicKey &pub, SecretKey &sec, const SecretKey& recovery_key, bool is_recovery);
+
     static void generate_keys(public_key &, secret_key &);
     friend void generate_keys(public_key &, secret_key &);
     static bool check_key(const public_key &);
     friend bool check_key(const public_key &);
+	static bool check_skey(const SecretKey &key);
+	friend bool check_skey(const SecretKey &key);
     static bool secret_key_to_public_key(const secret_key &, public_key &);
     friend bool secret_key_to_public_key(const secret_key &, public_key &);
     static bool generate_key_derivation(const public_key &, const secret_key &, key_derivation &);
@@ -100,10 +105,21 @@ namespace crypto {
     return res;
   }
 
+  ////////////  
+  inline SecretKey generate_keys_or_recover(PublicKey &pub, SecretKey &sec, const SecretKey& recovery_key = SecretKey(), bool is_recovery = false) {
+  return crypto_ops::generate_keys_or_recover(pub, sec, recovery_key, is_recovery);
+  }
+  ////////////
   /* Generate a new key pair
    */
   inline void generate_keys(public_key &pub, secret_key &sec) {
     crypto_ops::generate_keys(pub, sec);
+  }
+
+  /* Check a private key. Returns true if it is valid, false otherwise.
+  */
+  inline bool check_skey(const SecretKey &key) {
+	  return crypto_ops::check_skey(key);
   }
 
   /* Check a public key. Returns true if it is valid, false otherwise.
